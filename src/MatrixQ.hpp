@@ -4,37 +4,44 @@
 
 #include <Eigen/Dense>
 #include "R.hpp"
+#include <iostream>
+#include <complex>
 
 using Eigen::MatrixXd;
+using Eigen::MatrixXcd;
 using Eigen::VectorXd;
+using Eigen::VectorXcd;
 
 class MatrixQ{
 public:
     const int M;
+    const int matrixSize;
 
     MatrixXd transposedQ;
-    MatrixXd realEigenVectors;
-    MatrixXd realEigenInverseVectors;
-    VectorXd realEigenValues;
+    MatrixXcd realEigenVectors;
+    MatrixXcd realEigenInverseVectors;
+    VectorXcd realEigenValues;
 
 
     typedef Eigen::Matrix4d RateModel;
 
-    MatrixQ(int M, const RateModel& foo, double theta): M(M)
+    MatrixQ(const RateModel& foo, int M, double theta): M(M), matrixSize(R::getMatrixSize(M))
     {
-        transposedQ = initializeMatrixQ(M,foo,theta);
+        transposedQ = initializeMatrixQ(M,matrixSize,foo,theta);
         initializeEigenVectorsAndValues();
     }
 
-    MatrixQ(int M, const RateModel& rModel): MatrixQ(M,rModel,1)
+    MatrixQ(const RateModel& rModel, int M): MatrixQ(rModel,M,1)
     {
     }
 
-    template <typename Derived>
-    VectorXd multiplyByVector(const MatrixBase<Derived>& columnVector,double timeScale)
+    //template <typename Derived>
+    //VectorXd multiplyByVector(const Eigen::MatrixBase<Derived>& columnVector,double timeScale)
+    VectorXd multiplyByVector(double timeScale,const VectorXd& columnVector)
     {
-         Eigen::MatrixXd diagonalAfterThing = (dist * eigenValues.array()).exp().matrix().asDiagonal();
-         return (eigenVectors * (diagonalAfterThing * (eigenInverseVectors * columnVector)));
+        int size = columnVector.rows();
+        auto diagonalAfterThing = (timeScale * realEigenValues.topRows(size).array()).exp().matrix().asDiagonal();
+        return (realEigenVectors.topLeftCorner(size,size) * (diagonalAfterThing * (realEigenInverseVectors.topLeftCorner(size,size) * columnVector.cast< std::complex<double> >()))).real();
     }
 
     
@@ -46,22 +53,25 @@ public:
     
         Eigen::VectorXcd eigenValues = solver.eigenvalues();
 
-        double sumImaginaryValues = eigenValues.imag().array().abs().sum();
+        /*double sumImaginaryValues = eigenValues.imag().array().abs().sum();
         double sumImaginaryVectors = eigenVectors.imag().array().abs().sum();
 
-        assert(false);
-        assert(sumImaginaryValues == 0 && sumImaginaryVectors == 0);
+        if (sumImaginaryValues != 0 || sumImaginaryVectors != 0)
+        {
+            std::cout<<"My assumption about imaginary values was wrong. Sorry"<<std::endl;
+            abort();
+        }
 
-        realEigenVectors = eigenVectors.real();
-        realEigenValues = eigenValues.real();
+        assert(sumImaginaryValues == 0 && sumImaginaryVectors == 0);
+        */
+        realEigenVectors = eigenVectors;
+        realEigenValues = eigenValues;
         realEigenInverseVectors = realEigenVectors.inverse();
     }
 
 
-    VectorXd 
-
-    static MatrixXd initializeMatrixQ(int M,const RateModel& rateMatrix,  double theta){
-        MatrixXd transposedQ(R::getMatrixSize(M), R::getMatrixSize(M));
+    static MatrixXd initializeMatrixQ(int M,int matrixSize, const RateModel& rateMatrix,  double theta){
+        MatrixXd transposedQ(matrixSize, matrixSize);
         transposedQ.setZero();
 
         for(int n=1; n<=M; n++){

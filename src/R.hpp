@@ -3,8 +3,6 @@
 
 #include <array>
 #include <cassert>
-#include <boost/format.hpp>
-
 
 const int dims = 3;
 
@@ -75,6 +73,7 @@ public:
 
 
 
+    /*
     std::string toString() 
     {
         std::string resultString = str(boost::format("R{sum = %1%:")%sum);
@@ -85,7 +84,7 @@ public:
         }
 
         return  resultString + '}';
-    }
+    }*/
 
 
     /**
@@ -588,7 +587,7 @@ public:
             }
     };
 
-    IterateUpTo loopOver(int n)
+    inline IterateUpTo loopOver(int n)
     {
         return IterateUpTo(n);
     }

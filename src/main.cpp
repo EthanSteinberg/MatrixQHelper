@@ -17,52 +17,11 @@ int main()
     //std::cout<<blah<<std::endl;
 
 
-    MatrixQ ok(4,blah);
-    //std::cout<<ok.transposedQ<<std::endl;
-    //
-    MatrixXd regResult = ok.transposedQ.exp();
-
-
-    Eigen::EigenSolver<MatrixXd> solver(ok.transposedQ,true);
-
-    Eigen::MatrixXd eigenVectors = solver.eigenvectors().real();
-    Eigen::MatrixXd eigenInverseVectors = solver.eigenvectors().inverse().real();
-    
-    Eigen::VectorXd eigenValues = solver.eigenvalues().real();
-    //std::cout<<eigenValues.imag().array().abs().sum()<<std::endl;
-    //std::cout<<eigenVectors.imag().array().abs().sum()<<std::endl;
-
-
-    //Eigen::MatrixXd diagonalAfterThing = eigenValues.array().exp().matrix().asDiagonal();
-    //std::cout<<eigenValues<<std::endl;
-    //std::cout<<diagonalAfterThing<<std::endl;
-    //
-
-
-    //Eigen::MatrixXd newResult = (eigenVectors * diagonalAfterThing * eigenInverseVectors);
-
-    //std::cout<<(newResult - regResult).norm()<<std::endl;
-
-    
-
+    MatrixQ ok(blah,4);
     Eigen::VectorXd columnVector = Eigen::VectorXd::Random(ok.transposedQ.cols()).array().abs().matrix();
     
-    double sum = 0;
-    double sum1 = 0;
     for (int i = 0 ; i < 10000; i++)
     {
-        double dist = i/100.0;
-    Eigen::MatrixXd diagonalAfterThing = (dist * eigenValues.array()).exp().matrix().asDiagonal();
-    //std::cout<<eigenValues<<std::endl;
-    //std::cout<<diagonalAfterThing<<std::endl;
-
-    //Eigen::VectorXd newResult = (eigenVectors * (diagonalAfterThing * (eigenInverseVectors * columnVector)));
-    //sum += newResult.sum();
-    
-    Eigen::VectorXd result = (dist * ok.transposedQ).exp() * columnVector;
-    sum1 += result.sum();
+        Eigen::VectorXd result = ok.multiplyByVector(i/100.0,columnVector);
     }
-
-    std::cout<<sum<<" "<<sum1<<std::endl;
-
 }

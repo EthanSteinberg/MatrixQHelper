@@ -1,0 +1,5 @@
+*.swp
+program*
+*.class
+*.o
+*.d
